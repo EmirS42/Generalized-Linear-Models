@@ -1,0 +1,460 @@
+---
+title: "Math 523 - Assignment 2"
+author: "Emir Sevinc 260682995"
+date: "February 8, 2019"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## A4
+
+## a)
+
+Since we're using the log link, we will have that $g(\mu_i)=\eta_i$. Since $g(x)=log(x)$ and $\eta_i=X_i\beta$ we have $log(E[Y/X])=X\beta\implies E[Y/X]=exp(X_i\beta)$, and the model will look like this:
+
+$log(E[Y/X])=X\beta=\beta_0+\beta_1 X_1+\beta_2X_2+...+\beta_{L-1}X_{L-1}\implies E[Y/X]=exp[\beta_0+\beta_1 X_1+\beta_2X_2+...+\beta_{L-1}X_{L-1}]$, where L-1 additional parameters to the $\beta_0$ are present so we have L parameters in total, and the predictor is such that $X_i$ is 1 if X belongs to level i, and 0 else.
+
+## b)
+
+Let's code X as X = 0 if it belongs to group A, and 1 if it belongs to group B, so we're using group A as the reference group. The model now has L = 2 so a single slope parameter, so it looks like this:  $\log[E(Y/X)=\beta_0+\beta_1X]$, and the design matrix X is as follows:
+
+$$\bordermatrix{\text{X}& 1 &X\cr
+& 1 &0 \cr
+& 1 &0 \cr
+& . &0 \cr
+na& . &. \cr
+& . &1 & \cr
+& 1 &1 &\cr
+na+nb& 1 &1 & }$$ That is, since the groups are ordered, the second columns consists of zeroes until the $n_A$'th row, and ones from that row to the $n=n_A+n_B$'th row. We have that for the negative binomial model, $E(Y_i)=\mu_i=\mu$, $Var[Y_i]=\frac{\mu_I(\mu_i+\theta_z)}{\theta_z}$ (From assignment 1). These will be used later.
+
+$\\$Since we're using the log link, we have $g(x)=log(x)\implies g'(x)=\frac{1}{x}$.  Now we set up our likelihood:
+
+$\\l(\beta)=\sum_{i=1}^{n}\frac{y_i\theta_i-b(\theta_i)}{a(\phi)}+c(\theta_i,y_i)$. We have from the previous assignment that the negative binomial model can be written in exponential family form as $\\exp[ylog(\frac{\mu}{\mu+\theta_z})+\theta_zlog(1-\frac{\mu}{\mu+\theta_z})+log(\frac{\Gamma(y+\theta_z)}{\Gamma(y+1)\Gamma(\theta_z)})]$ where $\theta_i=log(\frac{\mu_i}{\mu_i+\theta_z})$,
+$b(\theta_i)=-\theta_zlog(\frac{\theta_z}{\mu_I+\theta_z})$ and $a(\phi)=1$. So our likelihood will look like:
+
+$l(\beta)=\sum_{i=1}^{n}[y_ilog(\frac{\mu_i}{\mu_i+\theta_z})+\theta_zlog(1-\frac{\mu_i}{\mu_i+\theta_z})+log(\frac {\Gamma(y+\theta_z)}{\Gamma(y+1)\Gamma(\theta_z)})]\\$. We know from class that a general score equation can be written as follows:
+
+$\frac{\partial l}{\partial \beta_j}=\sum_{i=1}^{n}\frac{y_i-\mu_i}{Var(Y_i)}*\frac{1}{g'(\mu_i)}*X_{ij}$. Plugging in our known values and using $g'(\mu_i)=\frac{1}{\mu_i}$ we get:
+$\\\frac{\partial l}{\partial \beta_j}=\sum_{i=1}^{n}\frac{(y_i-\mu_i)\theta_z}{\mu_i(\mu_i+\theta_z)}*\mu_i*X_{ij}$
+$\\\frac{\partial l}{\partial \beta_j}=\sum_{i=1}^{n}\frac{(y_i-\mu_i)\theta_z}{(\mu_i+\theta_z)}*X_{ij}$
+
+To optimise these will be set to 0, so we have our score equations as:
+$\\\frac{\partial l}{\partial \beta_0}=\sum_{i=1}^{n}\frac{(y_i-\mu_i)\theta_z}{(\mu_i+\theta_z)}*X_{io}$. But We know that $X_{i0}$ is corresponding to the intercept so the design matrix has all 1's in that column, thus this is equal to
+$\\\sum_{i=1}^{n}\frac{(y_i-\mu_i)\theta_z}{(\mu_i+\theta_z)}=0\implies \sum_{i=1}^{n}\frac{(y_i-\mu_i)}{(\mu_i+\theta_z)}=0\\$
+
+We also have 
+
+$\\\frac{\partial l}{\partial \beta_1}=\sum_{i=1}^{n}\frac{(y_i-\mu_i)\theta_z}{\mu_i(\mu_i+\theta_z)}*\mu_i*X_{i1}=0\implies \sum_{i=1}^{n}\frac{(y_i-\mu_i)}{\mu_i(\mu_i+\theta_z)}\mu_i*X_{i1}=0$. We can partition the sum as follows:
+$\sum_{i=1}^{n}\frac{(y_i-\mu_i)}{\mu_i(\mu_i+\theta_z)}\mu_i*X_{i1}=\sum_{i=1}^{n_A}\frac{(y_i-\mu_i)}{\mu_i(\mu_i+\theta_z)}\mu_i*X_{i1}+\sum_{i=n_{A+1}}^{n_A+n_B}\frac{(y_i-\mu_i)}{\mu_i(\mu_i+\theta_z)}\mu_i*X_{i1}$ since $n_A+n_B=n$. But as we can see from the design matrix, the column corresponding to the $X_{i1}$s is zero upto $n_A$, and 1 after that, so this simply becomes  
+$\\\sum_{i=1}^{n_A}\frac{(y_i-\mu_i)}{\mu_i(\mu_i+\theta_z)}\mu_i*0+\sum_{i=n_{A+1}}^{n_A+n_B}\frac{(y_i-\mu_i)}{\mu_i(\mu_i+\theta_z)}\mu_i*1$
+$\\=\sum_{i=n_{A+1}}^{n}\frac{(y_i-\mu_i)}{(\mu_i+\theta_z)}\\$
+
+So our score equations are:
+
+
+$\\\sum_{i=1}^{n}\frac{(y_i-\mu_i)}{(\mu_i+\theta_z)}=0$
+$\\\sum_{i=n_{A+1}}^{n}\frac{(y_i-\mu_i)}{(\mu_i+\theta_z)}=0\\$
+
+## c)
+
+
+For equation 1  Partitioning once again we get
+$\sum_{i=1}^{n}\frac{(y_i-\mu_i)}{(\mu_i+\theta_z)}=\sum_{i=1}^{n_A}\frac{(y_i-\mu_i)}{(\mu_i+\theta_z)}+\sum_{i=n_{A+1}}^{n_A+n_B}\frac{(y_i-\mu_i)}{(\mu_i+\theta_z)}$, but by the second score equation, the second term is zero (as $n=n_A+n_B$), so we must have 
+$\\\sum_{i=1}^{n_A}\frac{(y_i-\mu_i)}{(\mu_i+\theta_z)}=0$. Since our model has the form $\mu_i=exp(\beta_0+\beta_1X_{i1})$ we can plug this in the score equations, solve and simplify using the fact that $X_i1=0$ for $1\leq i\leq n_A$ and 1 else.
+So we get 
+$\\\\\sum_{i=1}^{n_A}\frac{y_i-e^{\beta_0+\beta_1X_{i1}}}{(e^{\beta_0+\beta_1X_{i1}}+\theta_z)}=0\implies$
+$\\\\\sum_{i=1}^{n_A}\frac{y_i-e^{\beta_0}}{(e^{\beta_0}+\theta_z)}=0 \implies$
+$\\\\\frac{1}{{(e^{\beta_0}+\theta_z)}}\sum_{i=1}^{n_A}y_i-e^{\beta_0}=0 \implies$
+$\\\\\sum_{i=1}^{n_A}y_i-e^{\beta_0}=0\implies$
+$\\\\\sum_{i=1}^{n_A}y_i=\sum_{i=1}^{n_A}e^{\beta_0}\implies$
+$\\\\\sum_{i=1}^{n_A}y_i=n_Ae^{\beta_0}\implies$
+$\\\\e^{\beta_0}=\frac{1}{n_A}\sum_{i=1}^{n_A}y_i\implies$
+$\\\\\hat \beta_0=log(\frac{1}{n_A}\sum_{i=1}^{n_A}y_i)$
+And for equation 2,
+
+$\\\\0=\sum_{i=n_{A+1}}^{n}\frac{y_i-e^{\beta_0+\beta_1X_{i1}}}{(e^{\beta_0+\beta_1X_{i1}}+\theta_z)}\implies$
+$\\\\0=\sum_{i=n_{A+1}}^{n}\frac{y_i-e^{\beta_0+\beta_1}}{e^{\beta_0+\beta_1}+\theta_z}\implies$
+$\\\\0=\frac{1}{{e^{\beta_0+\beta_1}+\theta_z}}\sum_{i=n_{A+1}}^{n}y_i-e^{\beta_0+\beta_1}\implies$
+$\\\\\sum_{i=n_{A+1}}^{n}y_i-e^{\beta_0+\beta_1}=0\implies$
+$\\\\\sum_{i=n_{A+1}}^{n}y_i-\sum_{i=n_{A+1}}^{n}e^{\beta_0+\beta_1}=0\implies$
+$\\\\\sum_{i=n_{A+1}}^{n}y_i=\sum_{i=n_{A+1}}^{n}e^{\beta_0+\beta_1}\implies$
+$\\\\\sum_{i=n_{A+1}}^{n}y_i=n_Be^{\beta_0+\beta_1}=n_Be^{\beta_0}e^{\beta_1}\implies$
+$\\\\\sum_{i=n_{A+1}}^{n}y_i=n_Be^{log(\frac{1}{n_A}\sum_{i=1}^{n_A}y_i)}e^{\beta_1}\implies$
+$\\\\\sum_{i=n_{A+1}}^{n}y_i=(\frac{n_B}{n_A}\sum_{i=1}^{n_A}y_i)e^\beta_1\implies$
+$\\\\e^{\beta_1}=\frac{n_A}{n_B}\frac{\sum_{i=n_{A+1}}^{n}y_i}{\sum_{i=1}^{n_A}y_i}\implies$
+$\\\\\beta_1=log(\frac{n_A}{n_B}\frac{\sum_{i=n_{A+1}}^{n}y_i}{\sum_{i=1}^{n_A}y_i})\implies$
+$\\\\\hat\beta_1=log({\frac{1}{n_B}\sum_{i=n_{A+1}}^{n}y_i})-log({\frac{1}{n_A}\sum_{i=1}^{n_A}y_i})$. Note that the term getting subtracted is equal to our estimate of $\beta_0$ so 
+$\\\hat\beta_1=log({\frac{1}{n_B}\sum_{i=n_{A+1}}^{n}y_i})-\hat \beta_0$
+
+So our parameter estimates are:
+$\\\hat \beta_0=log(\frac{1}{n_A}\sum_{i=1}^{n_A}y_i)$
+$\\\hat\beta_1=log({\frac{1}{n_B}\sum_{i=n_{A+1}}^{n}y_i})-\hat \beta_0$
+
+
+the fitted means will be $\hat \mu_i=e^{\hat \beta_0+\hat \beta_1X_{i1}}$ in general, but since the value of $X_{i1}$ is 0 for $i=1,2,...,n_A$ and 1 for $i=n_{A+1},...,n$ the fitted means will be:
+
+$\\\hat \mu_i=e^{\hat\beta_0}=\frac{1}{n_A}\sum_{i=1}^{n_A}y_i$ for $i=1,...,n_A$ and
+$\\\hat \mu_i=e^{\hat \beta_0+\hat \beta_1}=e^{\hat \beta_0+log({\frac{1}{n_B}\sum_{i=n_{A+1}}^{n}y_i})-\hat \beta_0}$
+$\\=\frac{1}{n_B}\sum_{i=n_{A+1}}^{n}y_i$ for $i=n_{A+1},...,n$ 
+
+
+If the canonical links were used, the score equations would be equal to
+$\\\sum_{i=1}^{n}y_iX_{ij}=\sum_{i=1}^{n}\mu_iX_{ij}$. So we would get
+$\\\sum_{i=1}^{n}y_iX_{i0}=\sum_{i=1}^{n}\mu_iX_{i0}\implies \sum_{i=1}^{n}y_i=\sum_{i=1}^{n}\mu_i$ and 
+$\\\sum_{i=1}^{n}y_iX_{i1}=\sum_{i=1}^{n}\mu_iX_{i1}\implies\sum_{i=n_{A+1}}^{n}y_i=\sum_{i=n_{A+1}}^{n}\mu_i$ as our score equations.
+Partitioning the sums for eq1,
+
+$\sum_{i=1}^{n_A}y_i+\sum_{i=n_{A+1}}^{n}y_i=\sum_{i=1}^{n_A}\mu_i+\sum_{i=n_{A+1}}^{n}\mu_i$, but since both of the added terms are equal by the second score equation we must have 
+$\\\sum_{i=1}^{n_A}y_i=\sum_{i=1}^{n_A}\mu_i\\$. The canonical link being used implies that
+$log(\frac{\mu_i}{\mu_i+\theta_z})=X_i\beta$ and since we know the inverse of the canonical from assignment 1 (via the b') to be $\frac{\theta_ze^\theta}{1-e^\theta}$ we must have, using the $X\beta_i$ we know from earlier, $\mu_i=\frac{\theta_ze^{\beta_0+\beta_1X_{i1}}}{1-e^{\beta_0+\beta_1X_{i1}}}\\$.
+
+Plugging these in the score equations and using the known values of $X_{i1}$ for our intervals we get 
+$\\\sum_{i=1}^{n_A}y_i=\sum_{i=1}^{n_A}\frac{\theta_ze^{\beta_0+\beta_1X_{i1}}}{1-e^{\beta_0+\beta_1X_{i1}}}\implies$
+$\\\sum_{i=1}^{n_A}y_i=\sum_{i=1}^{n_A}\frac{\theta_ze^{\beta_0}}{1-e^{\beta_0}}=n_A\frac{\theta_ze^{\beta_0}}{1-e^{\beta_0}}$
+
+and
+$\\\sum_{i=n_{A+1}}^{n}y_i=\sum_{i=n_{A+1}}^{n}\frac{\theta_ze^{\beta_0+\beta_1}}{1-e^{\beta_0+\beta_1}}\implies$
+$\\\sum_{i=n_{A+1}}^{n}y_i=n_B\frac{\theta_ze^{\beta_0+\beta_1}}{1-e^{\beta_0+\beta_1}}$
+
+From $\\\sum_{i=1}^{n_A}y_i=n_A\frac{\theta_ze^{\beta_0}}{1-e^{\beta_0}}$ we will have $(1-e^{\beta_0})\sum_{i=1}^{n_A}y_i=n_A\theta_ze^{\beta_0}\implies e^{\beta_0}[n_A\theta_z+\sum_{i=1}^{n_A}y_i]=\sum_{i=1}^{n_A}y_i\implies$
+$e^{\beta_0}=\frac{\sum_{i=1}^{n_A}y_i}{n_A\theta_z+\sum_{i=1}^{n_A}y_i}\implies$
+${\hat\beta_0}=log(\frac{\sum_{i=1}^{n_A}y_i}{n_A\theta_z+\sum_{i=1}^{n_A}y_i})\\$
+
+And from $\sum_{i=n_{A+1}}^{n}y_i=n_B\frac{\theta_ze^{\beta_0+\beta_1}}{1-e^{\beta_0+\beta_1}}$ we will have
+
+$n_A\theta_ze^{\beta_0+\beta_1}=(\sum_{i=n_{A+1}}^{n}y_i)(1-e^{\beta_0+\beta_1})\implies$
+$[n_B\theta_z+\sum_{i=n_{A+1}}^{n}y_i]e^{\beta_0}e^{\beta_1}=\sum_{i=n_{A+1}}^{n}y_i$. From this we can isolate $\beta_1\\\\$:
+
+$e^\beta_1=\frac{\sum_{i=n_{A+1}}^{n}y_i}{(n_B\theta_z+\sum_{i=n_{A+1}}^{n}y_i)/\beta_0}\implies$
+$\beta_1=log((\frac{\sum_{i=n_{A+1}}^{n}y_i}{n_B\theta_z+\sum_{i=n_{A+1}}^{n}y_i})/\frac{\sum_{i=1}^{n_A}y_i}{n_A\theta_z+\sum_{i=1}^{n_A}y_i})$
+$\\=log(\frac{\sum_{i=n_{A+1}}^{n}y_i}{n_B\theta_z+\sum_{i=n_{A+1}}^{n}y_i})-log(\frac{\sum_{i=1}^{n_A}y_i}{n_A\theta_z+\sum_{i=1}^{n_A}y_i})$
+$\\=log(\frac{\sum_{i=n_{A+1}}^{n}y_i}{n_B\theta_z+\sum_{i=n_{A+1}}^{n}y_i})-\hat\beta_0\\\\$
+
+So our parameter estimates this time are:
+$\hat\beta_0=log(\frac{\sum_{i=1}^{n_A}y_i}{n_A\theta_z+\sum_{i=1}^{n_A}y_i})\\$
+$\\\hat\beta_1=log(\frac{\sum_{i=n_{A+1}}^{n}y_i}{n_B\theta_z+\sum_{i=n_{A+1}}^{n}y_i})-\hat\beta_0\\\\$
+
+
+Since our means are now $\mu_i=\frac{\theta_ze^{\beta_0+\beta_1}}{1-e^{\beta_0+\beta_1}}$, using our known $X_{i1}$ values we get:
+
+$\\\hat \mu_i=\frac{\theta_ze^{\hat\beta_0}}{1-e^{\hat\beta_0}}=\theta_z\frac{\sum_{i=1}^{n_A}y_i}{n_A\theta_z+\sum_{i=1}^{n_A}y_i}/\frac{n_A\theta_z}{n_A\theta_z+\sum_{i=1}^{n_A}y_i}=\frac{\theta_z\sum_{i=1}^{n_A}y_i}{n_A\theta_z}=\frac{\sum_{i=1}^{n_A}y_i}{n_A}$ for i = $1,...,n_A$ and 
+
+$\\\hat \mu_i=\frac{\theta_ze^{\hat\beta_0+\hat\beta_1}}{1-e^{\hat\beta_0+\hat\beta_1}}=\theta_ze^{\hat\beta_0+log(\frac{\sum_{i=n_{A+1}}^{n}y_i}{n_B\theta_z+\sum_{i=n_{A+1}}^{n}y_i})-\hat\beta_0}/(\frac{n_B\theta_z}{n_B\theta_z+\sum_{i=n_{A+1}}^{n}y_i})=\frac{\sum_{i=n_{A+1}}^{n}y_i}{n_B}$ for i = $n_{A+1},...,n\\$
+
+It is noteworthy that the parameter estimates are different, but we got the same fitted means. 
+
+## d)
+
+We have that our design matrix (nx2) is:
+
+
+$$\bordermatrix{\text{X}& 1 &X\cr
+& 1 &0 \cr
+& 1 &0 \cr
+& . &0 \cr
+na& . &. \cr
+& . &1 & \cr
+& 1 &1 &\cr
+na+nb& 1 &1 & }$$
+
+
+The end result of this computation will make use of the terms $W_{ii}$ but we dont have to know them until the end, so we will only note that W is an nxn matrix with $W=diag[w_{1},w_{2},...,w_{n}]$
+
+First we need to multiply $X^T$(2xn) with $W$(nxn) where $X^T:$
+
+$$\bordermatrix{\text{Xtr}&  &  & & n_A & n_{A+1}& & n& \cr
+& 1 & 1& {...}& 1 &1 &{...} &1\cr
+& 0 & 0& {...}& 0 &1 &{...} &1 }$$
+
+Multiplying this out with the W matrix guves:
+
+$$\bordermatrix{\text{Xtr}&  &  & & n_A & n_{A+1}& & n& \cr
+& w_{11} & w_{22}& {...}& w_{n_An_A} &w_{n_{A+1}n_{A+1}} &{...} &w_{nn}\cr
+& 0 & 0& {...}& 0 &w_{n_{A+1}n_{A+1}} &{...} &w_{nn} }$$
+
+Now we multiply this with our nx2 design matrix to get:
+$$\bordermatrix{\text{F}&  &\cr
+& \sum_{i=1}^{n}w_{ii} &\sum_{i=n_{A+1}}^{n}w_{ii} \cr
+& \sum_{i=n_{A+1}}^{n}w_{ii} &\sum_{i=n_{A+1}}^{n}w_{ii} }$$
+
+So the entries of W will only change according to the link function used. In general, we have that $w_{ii}=(\frac{\partial \mu_i}{\partial \eta_i})^2\frac{1}{Var(Y_i)}\\$
+Since $g(\mu_i)=\eta_i$, $\mu_i=g^{-1}(\eta_i)$. So $\frac{\partial \mu_i}{\partial \eta_i}=\frac{1}{g'(\mu_i)}$ as we have seen in class, and we know from assignment 1 that $Var[Y_i]=\frac{\mu_i(\mu_i+\theta_z)}{\theta_z}\\$
+So $w_{ii}=\frac{1}{(g'(\mu_i))^2}\frac{\theta_z}{\mu_i(\mu_i+\theta_z)}$ 
+
+If we are using the log link, then $g(\mu)=log(\mu)\implies g'(\mu)=\frac{1}{\mu}\implies \frac{1}{(g'(\mu))^2}=\mu^2\\$
+Thus $w_{ii}=\frac{\mu_i\theta_z}{\mu_i+\theta_z}$ so the Fisher Information matrix is:
+
+$$\bordermatrix{\text{F}&  &\cr
+& \sum_{i=1}^{n}\frac{\mu_i\theta_z}{\mu_i+\theta_z} &\sum_{i=n_{A+1}}^{n}\frac{\mu_i\theta_z}{\mu_i+\theta_z} \cr
+& \sum_{i=n_{A+1}}^{n}\frac{\mu_i\theta_z}{\mu_i+\theta_z} &\sum_{i=n_{A+1}}^{n}\frac{\mu_i\theta_z}{\mu_i+\theta_z} }$$
+
+
+If we use the canonical link, $g=log(\frac{\mu}{\mu+\theta_z})\implies g'=\frac{\mu+\theta_z}{\mu}*\frac{\theta_z}{(\mu+\theta_z)^2}=\frac{\theta_z}{\mu(\mu+\theta_z)}\implies \frac{1}{(g')^2}=(\frac{\mu(\mu+\theta_z)}{\theta_z})^2=(Var[Y_i])^2\\$
+Thus $w_{ii}=(Var[Y_i])^2\frac{1}{Var[Y_i]}=Var[Y_i]=\frac{\mu_i(\mu_i+\theta_z)}{\theta_z}$ so our Fisher Information matrix is now:
+
+
+$$\bordermatrix{\text{F}&  &\cr
+& \sum_{i=1}^{n}\frac{\mu_i(\mu_i+\theta_z)}{\theta_z} &\sum_{i=n_{A+1}}^{n}\frac{\mu_i(\mu_i+\theta_z)}{\theta_z} \cr
+& \sum_{i=n_{A+1}}^{n}\frac{\mu_i(\mu_i+\theta_z)}{\theta_z} &\sum_{i=n_{A+1}}^{n}\frac{\mu_i(\mu_i+\theta_z)}{\theta_z} }$$
+Note that these are different.
+
+## e)
+We will need to differentiate the score with respect to $\beta$ to get the Hessian.
+$\\\frac{\partial l}{\partial \beta_j}=\sum_{i=1}^{n}\frac{(y_i-\mu_i)\theta_z}{(\mu_i+\theta_z)}*X_{ij}$
+This is a function of $\mu$ which is a function of $\eta$ and $\eta$ is a function of $\beta$, so we need:
+$\frac{\partial l^2}{\partial \beta_j\partial\beta_k}=\frac{\partial}{\partial\mu_i}[\sum_{i=1}^{n}\frac{(y_i-\mu_i)\theta_z}{(\mu_i+\theta_z)}*X_{ij}]*\frac{\partial \mu_i}{\partial \eta_i}*\frac{\partial \eta_i}{\partial \beta_k}\\$
+We know that $\frac{\partial \mu_i}{\partial \eta_i}=\frac{1}{g'(\mu_i)}=\mu_i$ since we're using $g(x)=log(x)$, and $\frac{\partial \eta_i}{\partial \beta_k}=X_{ik}\\\\$
+Now $\frac{\partial}{\partial\mu_i}[\sum_{i=1}^{n}\frac{(y_i-\mu_i)\theta_z}{(\mu_i+\theta_z)}*X_{ij}]=X_{ij}\theta_z\sum_{i=1}^{n}\frac{\partial}{\partial\mu_i}\frac{(y_i-\mu_i)}{(\mu_i+\theta_z)}\\$
+$\\\frac{\partial}{\partial\mu_i}\frac{(y_i-\mu_i)}{(\mu_i+\theta_z)}=\frac{-1*(\mu_i+\theta_z)-(y_i-\mu_i)}{(\mu_i+\theta_z)^2}=\frac{-y_i-\theta_z}{(\mu_i+\theta_z)^2}\\$
+So $\frac{\partial l^2}{\partial \beta_j\partial\beta_k}=\sum_{i=1}^{n}X_{ij}\theta_z\frac{-y_i-\theta_z}{(\mu_i+\theta_z)^2}X_{ik}$. Taking the minus of this, we get that the observed information model is 
+
+$$\bordermatrix{\text{F}&  &\cr
+& \sum_{i=1}^{n}\theta_z\frac{y_i+\theta_z}{(\mu_i+\theta_z)^2}\mu_i &\sum_{i=n_{A+1}}^{n}\theta_z\frac{y_i+\theta_z}{(\mu_i+\theta_z)^2}\mu_i \cr
+& \sum_{i=n_{A+1}}^{n}\theta_z\frac{y_i+\theta_z}{(\mu_i+\theta_z)^2}\mu_i &\sum_{i=n_{A+1}}^{n}\theta_z\frac{y_i+\theta_z}{(\mu_i+\theta_z)^2}\mu_i }$$
+
+This is not the same as the Fisher Info matrix because we didn't use the canonical link.
+
+## f)
+
+Asymptotic variance is given by the diagonal elements of the inverse of the Fisher information matrix. We had that when the log link was used the Fisher Info was:
+
+$$\bordermatrix{\text{F}&  &\cr
+& \sum_{i=1}^{n}\frac{\mu_i\theta_z}{\mu_i+\theta_z} &\sum_{i=n_{A+1}}^{n}\frac{\mu_i\theta_z}{\mu_i+\theta_z} \cr
+& \sum_{i=n_{A+1}}^{n}\frac{\mu_i\theta_z}{\mu_i+\theta_z} &\sum_{i=n_{A+1}}^{n}\frac{\mu_i\theta_z}{\mu_i+\theta_z} }$$
+
+This is of the form:
+
+$$\bordermatrix{\text{M}&  &\cr
+& M &N \cr
+& M &N }$$
+
+So its invere would look like:
+
+$$\bordermatrix{\text{Minv}&  &\cr
+& \frac{N}{MN-N^2} &\frac{-N}{MN-N^2} \cr
+& \frac{-N}{MN-N^2} &\frac{M}{MN-N^2}}$$
+
+So we can easily get the diagonal entires as $\frac{N}{MN-N^2}$ and $\frac{M}{MN-N^2}$. Thus we will have
+$Var[\hat \beta_0]=\frac{\sum_{i=n_{A+1}}^{n}\frac{\mu_i\theta_z}{\mu_i+\theta_z}}{\sum_{i=1}^{n}\frac{\mu_i\theta_z}{\mu_i+\theta_z} *\sum_{i=n_{A+1}}^{n}\frac{\mu_i\theta_z}{\mu_i+\theta_z}-(\sum_{i=n_{A+1}}^{n}\frac{\mu_i\theta_z}{\mu_i+\theta_z})^2}$ and $Var[\hat \beta_1]=\frac{\sum_{i=1}^{n}\frac{\mu_i\theta_z}{\mu_i+\theta_z}}{\sum_{i=1}^{n}\frac{\mu_i\theta_z}{\mu_i+\theta_z} *\sum_{i=n_{A+1}}^{n}\frac{\mu_i\theta_z}{\mu_i+\theta_z}-(\sum_{i=n_{A+1}}^{n}\frac{\mu_i\theta_z}{\mu_i+\theta_z})^2}$
+
+## g)
+
+$D(y,\hat \mu)=2\sum_{i=1}^{n}\omega_i[y_i(\tilde\theta_i-\hat\theta_i)-b(\tilde\theta_i)+b(\hat\theta_i)]\\$
+We had for the negative binomial model that $\theta=\log(\frac{\mu}{\mu+\theta_z})$
+For the saturated model we will have $\tilde\mu_i=y_i\\$. so $\tilde\theta_i=log(\frac{\hat\mu}{\hat\mu+\theta_z})=log(\frac{y_i}{y_i+\theta_z})$ and $\hat\theta_i=log(\frac{\hat\mu}{\hat\mu+\theta_z})\\$
+We also had for the model that  $b(\theta)=-\theta_zlog(1-e^\theta)$, thus we will have: $b(\hat\theta_i)=-\theta_zlog(1-e^{log(\frac{\hat\mu}{\hat\mu+\theta_z})})=-\theta_zlog(1-\frac{\hat\mu}{\hat\mu+\theta_z})=-\theta_zlog(\frac{\theta_z}{\hat\mu+\theta_z})$ and $b(\tilde\theta_i)=-\theta_zlog(1-e^{\tilde\theta_i})=-\theta_zlog(1-e^{log(\frac{y_i}{y_i+\theta_z})})=-\theta_zlog(1-\frac{y_i}{y_i+\theta_z})=-\theta_zlog(\frac{\theta_z}{y_i+\theta_z})\\$
+
+
+
+So we can write the deviance as $2\sum_{i=1}^{n}y_i(log(\frac{y_i}{y_i+\theta_z})-log(\frac{\hat\mu}{\hat\mu+\theta_z}))+\theta_zlog(\frac{\theta_z}{y_i+\theta_z})-\theta_zlog(\frac{\theta_z}{\hat\mu+\theta_z})$
+$\\=2\sum_{i=1}^{n}y_ilog(y_i)-y_ilog(y_i+\theta_z)-y_ilog(\hat\mu)+y_ilog(\hat\mu+\theta_z)+\theta_zlog(\theta_z)-\theta_zlog(y_i+\theta_z)-\theta_zlog(\theta_z)+\theta_zlog(\hat\mu+\theta_z)$
+$\\=2\sum_{i=1}^{n}log(y_i+\theta_z)(-y_i-\theta_z)+log(\hat\mu+\theta_z)(y_i+\theta_z)+y_ilog(y_i)-y_ilog(\hat\mu_i)$
+$\\=2\sum_{i=1}^{n}-log(y_i+\theta_z)(y_i+\theta_z)+log(\hat\mu+\theta_z)(y_i+\theta_z)+y_i[log(\frac{y_i}{\hat\mu_i})]$
+$\\=2\sum_{i=1}^{n}y_i+\theta_z[log(\hat\mu+\theta_z)-log(y_i+\theta_z)]+y_i[log(\frac{y_i}{\hat\mu_i})]$
+$\\=2\sum_{i=1}^{n}(y_i+\theta_z)[log\frac{(\hat\mu+\theta_z)}{(y_i+\theta_z)}]+y_i[log(\frac{y_i}{\hat\mu_i})]$
+
+
+
+
+# A5)
+
+The poisson distribution with paraneter $\mu$ can be written as an exponential family as $exp[-\mu+log\frac{\mu^y}{y!}]$ 
+$\\=exp[-\mu+ylog(\mu)-log(y!)]$, so the log likelihood we will work with is:
+$\sum_{i=1}^{n}[-\mu+y_ilog(\mu)-log(y!)]=-n\mu+log(\mu)\sum_{i=1}^{n}y_i-nlog(y!)=-n\mu+log(\mu)n\bar y-nlog(y!)\\$
+So we have that the score (first derivative wrt $\mu$) will be $\frac{\partial }{\partial \mu}-n\mu+log(\mu)n\bar y-nlog(y!)=-n+\frac{n\bar y}{\mu}=\frac{n\bar y -n \mu}{\mu}=\frac{n(\bar y - \mu)}{\mu}\\$
+So the Hessian(second derivative) will be given by $\frac{\partial }{\partial \mu}\frac{n(\bar y - \mu)}{\mu}=\frac{-n\mu-[n(\bar y - \mu)]}{\mu^2}=\frac{-n\mu-n \bar y + n\mu}{\mu^2}=\frac{-n \bar y}{\mu^2}\\$
+Finally the information will be given by the (negative) expectation of the Hessian, that is $E[\frac{n \bar y}{\mu^2}]=\frac{n}{\mu^2}E[\bar y]=\frac{n\mu}{\mu^2}=\frac{n}{\mu}$
+So now we have everything we need for the algorithms. For fisher scoring, for a parameter B:
+
+$B^{t+1}=B^t+(I^t)^{-1}u^t$ where I is the information, and $u^t$ is the score. Thus plugging those in we will have:
+$\mu^{t+1}=\mu^t+\frac{\mu^t}{n}\frac{n(\bar y - \mu^t)}{\mu^t}=\mu^t+\bar y - \mu=\bar y\\$
+
+On the other hand,  Newton-Rhapson will iterate 
+
+$\\B^{t+1}=B^t-(H^t)^{-1}u^t$ where H is the hessian. So plugging in what we know:
+$\\\mu^{t+1}=\mu^t+\frac{(\mu^t)^2}{n \bar y}\frac{n(\bar y - \mu^t)}{\mu^t}$
+$\\=\mu^t+\frac{\mu^t}{\bar y}(\bar y - \mu^t)$
+$\\=\mu^t+\mu^t-\frac{(\mu^t)^2}{\bar y}$ so
+$\\\mu^{t+1}=2\mu^t-\frac{(\mu^t)^2}{\bar y}$. To have the previous result, we would need to have
+$\\ 2\mu^t-\frac{(\mu^t)^2}{\bar y}=\bar y \implies 2\mu^t\bar y - (\mu^t)^2=\bar y ^2\implies \bar y ^2 -2\mu^t \bar y + (\mu^t)^2=0\implies (\bar y ^2-\mu^t)^2=0\implies \mu^t=\bar y$. So for Newton Rhapson, if $\mu^t=\bar y$, we can have the Fisher Scoring result $\mu^{t+1}=\bar y$
+
+
+
+
+# A6)
+
+```{r, message=F, warning=F}
+
+awards <- read.csv("awards.csv")
+attach(awards)
+```
+
+
+## a) 
+
+```{r, message=F, warning=F}
+fit1<-glm(numawards~1+math,family=poisson(link=log))
+summary(fit1)
+```
+$\beta_0$ is estimated as -5.333532 and $\beta_1$ is estimated as 0.086166 .
+The low p valuesuggests math to be a significant predictor.
+
+```{r, message=F, warning=F} 
+confint(fit1,level=0.95)
+```
+So the CI is found as [0.06737466,0.105356]
+
+
+## b)
+
+```{r, message=F, warning=F}
+fit2<-glm(numawards~as.factor(prog),family=poisson(link=log),x=TRUE)
+summary(fit2)
+```
+
+The model has 3 parameters, and their estimated values are printed above. as.factor(prog)3 has a high corresponding p value thus does not appear to be significant, but the intercept and as.factor(prog)2 have low p values and thus are significant.
+
+We confirm with the Wald test:
+
+```{r, message=F, warning=F}
+
+
+I <- t(fit2$x)%*%diag(fit2$weights)%*%fit2$x
+
+# Inverse Fisher information matrix (i.e. as. covariance matrix of the MLEs)
+
+I.inv <- solve(I)
+
+sd <- sqrt(diag(I.inv))
+
+# computing the Wald statistics (testing whether beta_j = 0 for j=1,2)
+
+beta <- fit2$coefficients
+p.val <- pchisq((beta/sd)^2,df=1,lower.tail=FALSE)
+
+p.val
+```
+So we see once again p values implying the significance of the intercept, as.factor(prog)2 but NOT of as.factor(prog)3
+
+```{r, message=F, warning=F}
+#Wald Stat Testing
+
+library(Matrix)
+as.numeric(rankMatrix(I.inv))
+
+W <- t(matrix(beta,nrow=3))%*%I%*%matrix(beta,nrow=3)
+pchisq(W,df=3,lower.tail=FALSE)
+```
+
+
+The test suggests that not all predictor parameters are 0, and:
+```{r, message=F, warning=F}
+z <- qnorm(0.975)
+c.upper <- beta+z*sd
+c.lower <- beta-z*sd
+CI <- cbind(c.lower,c.upper)
+colnames(CI)<-c("2.5 %","97.5 %")
+CI
+```
+
+As we can see from the Wald confidence intervals too, the estimate for as.factor(prog)3 contains 0, but the rest do not.
+Now we perform a likehlihood ratio test:
+
+```{r, message=F, warning=F}
+anova(fit2, test = "LRT")
+
+```
+As we can see as.factor(prog) has high significance.
+
+
+
+## c)
+
+
+```{r, message=F, warning=F}
+
+fit3 <- glm(numawards~1+math+as.factor(prog),family=poisson, x=TRUE)
+summary(fit3)
+fit4 <- glm(numawards~1+math*as.factor(prog),family=poisson, x=TRUE)
+summary(fit4)
+```
+
+
+The first model has 4 parameters, and all of them except for as.factor(prog)3 appear to be significant with low p values. The second model has 6 parameters but has very high p values across the board, so doesn't appear to be that useful. 
+Both models attempt to relate the expected number of awards with math and prog. $\\$
+On the first fit, the model fit is (since log is canonical for poission) $logE[Y/X]=\beta_0+\beta_1*math+\beta_2X_2+\beta_3X_3\implies E(Y/X)=exp(\beta_0+\beta_1*math+\beta_2X_2+\beta_3X_3)$ where $X_2=1$ if the student is in program 2 and $X_2=0$ if not, and $X_3=1$ if the student is in program 3 and $X_3=0$ if not.
+For math in this model we have a positive parameter value of  0.07015, so each point of increase in the math score increases $X\beta$ by 0.07015, and this corresponds to an $e^{0.07015}=1.072$ times (so about 7%) increase in the number of awards received.
+Since prog is a factor predictor, to interpret them properly we would need the following:
+$\\i):logE[Y/X=prog1]=\beta_0+\beta_1*math$ since program 1 appears to be used as the reference class,
+$\\ii):logE[Y/X=prog2]=\beta_0+\beta_1*math+\beta_2$
+$\\iii):logE[Y/X=prog3]=\beta_0+\beta_1*math+\beta_3$
+
+Note that $\beta_2=ii-i$ and $\beta_3=iii-i$. So we have that 
+
+$\\\beta_2=logE[Y/X=prog2]-logE[Y/X=prog1]\implies e^{\beta_2}=e^{logE[Y/X=prog2]}*e^{-logE[Y/X=prog1]} \implies e^{\beta_2}*e^{logE[Y/X=prog1]}=e^{logE[Y/X=prog2]}\implies e^{\beta_2}*E[Y/X=prog1]=E[Y/X=prog2]$. Our $\beta_2$ estimate is 1.08386 Thus what the model says is that $e^{1.08386}=2.95607$ The expected number of awards earned by a student in program 2 would be about 2.95 as much as the expected number of awards of one in program 1. The interpretation of $\beta_3$ is similar,
+$\\\beta_3=logE[Y/X=prog3]-logE[Y/X=prog1]\implies e^{\beta_3}=e^{logE[Y/X=prog3]}*e^{-logE[Y/X=prog1]} \implies e^{\beta_3}*e^{logE[Y/X=prog1]}=e^{logE[Y/X=prog3]}\implies e^{\beta_3}*E[Y/X=prog1]=E[Y/X=prog3]$ so according to the model (if we are to take $\beta_3$ to be a significant parameter, which we likely wouldn't due to the p value) the expected number of awards earned by a student in program 3 would be $e^{0.36981}=1.44746$ times the expected number earned by one in program 1. Overall, the model says that a student in programs 2 or 3 is significantly more likely to earn an award than a student in program 1, and there is a strong (positive) statistical relationship between the number of awards earned and the math score.
+
+As for the interpretation for the second model it is of the from 
+$logE[Y/X]=\beta_0+\beta_1*math+\beta_2X_2+\beta_3X_3+\beta_4*math*X_2+\beta_5*math*X_3$ with interactions.
+$\\i):logE[Y/X=prog1]=\beta_0+\beta_1*math$ since program 1 appears to be used as the reference class,
+$\\ii):logE[Y/X=prog2]=\beta_0+\beta_1*math+\beta_2+\beta_4*math$
+$\\ii):logE[Y/X=prog3]=\beta_0+\beta_1*math+\beta_3+\beta_5*math$
+
+This time $ii-i$ gives $\beta_2+\beta_4math$ a,d $iii-1$ gives $\beta_3+\beta_5math$ so we have a similar formulation to the revious model:
+$\\\beta_2+\beta_4math=logE[Y/X=prog2]-logE[Y/X=prog1]\implies e^{\beta_2+\beta_4math}=e^{logE[Y/X=prog2]}*e^{-logE[Y/X=prog1]} \implies e^{\beta_2+\beta_4math}*e^{logE[Y/X=prog1]}=e^{logE[Y/X=prog2]}\implies e^{\beta_2+\beta_4math}*E[Y/X=prog1]=E[Y/X=prog2]$. So we can interpret the model in a similar way but this time math effects the proportion of the expectaitons too, that is an increase of a math score by one causes ${\beta_2+\beta_4math}$ to increase by $\beta_4=0.02841$ which is an $e^{0.02841}=1.0288$ times an increase in $e^{\beta_2+\beta_4math}$, and in turn with the additional effect of the prorgram the student is in ($\beta_2$), the expected value of the number of awards earned by a student in program 2 is $e^{-0.44107+0.02841*math}$ times as much as the expected value of the number of awards earned by a student in program 1. Note that this term depends on the math score as well, which is what differs it from the previous model.
+
+Equivalently,
+$\\\beta_3+\beta_5math=logE[Y/X=prog3]-logE[Y/X=prog1]\implies e^{\beta_3+\beta_5math}=e^{logE[Y/X=prog3]}*e^{-logE[Y/X=prog1]} \implies e^{\beta_3+\beta_5math}*e^{logE[Y/X=prog1]}=e^{logE[Y/X=prog3]}\implies e^{\beta_3+\beta_5math}*E[Y/X=prog1]=E[Y/X=prog3]$
+
+The interpretation is identical, an increase of a math score by one causes ${\beta_3+\beta_5math}$ to increase by $\beta_5=0.02290$ which is an $e^{0.02290}=1.023$ times an increase in $e^{\beta_3+\beta_5math}$, and in turn with the additional effect of the prorgram the student is in ($\beta_3$), the expected value of the number of awards earned by a student in program 2 is $e^{-0.84473+0.02290*math}$ times as much as the expected value of the number of awards earned by a student in program 1.
+
+Note that in this model $E[Y/X=prog1]$ is able to be higher depending on the value of math.
+
+This model however overall has a high lack of significance, due to the high p values.
+
+
+## d)
+We stratify the data as instructed and consider how well the models fit the means of each strata:
+
+```{r, message=F, warning=F}
+awards <- cbind(awards, model1=fit1$fitted.values,model2=fit2$fitted.values, model3=fit3$fitted.values, model4=fit4$fitted.values) 
+strata <- cut(awards$math, breaks=c(35, 40, 45, 50, 55, 60, 65, 70, 75)) 
+set_new <- split(awards, strata) 
+plot(awards$numawards~strata) 
+
+meantot <- vector(mode="numeric", length=8) 
+model1_mean <- vector(mode="numeric", length=8) 
+model2_mean <- vector(mode="numeric", length=8) 
+model3_mean <- vector(mode="numeric", length=8)
+model4_mean <- vector(mode="numeric", length=8) 
+i <- 1
+for (val in set_new) { 
+  meantot[i] <- mean(val$numawards) 
+  model1_mean[i] <- mean(val$model1)
+  model2_mean [i] <- mean(val$model2)
+  model3_mean[i] <- mean(val$model3)
+  model4_mean[i] <- mean(val$model4) 
+  mean(val$model3) 
+  mean(val$model4) 
+  i <- i+1 } 
+plot(meantot) 
+lines(model1_mean, col="Red") 
+lines(model2_mean, col="Blue") 
+lines(model3_mean, col="Purple") 
+lines(model4_mean, col="Pink")
+```
+Model 1 (red) and model 3 (purple) seem to be fitting well.
+
+## e)
+
+Analysis of deviance:
+```{r, message=F, warning=F}
+
+anova(fit1, fit2, fit3, fit4, test="Chi")
+
+```
+
+The third model has the lowest p value, and in fact seems to be the only model with the significantly low p value, so it would seem that the first model from part c) is the best suited one. The interpretation was provided in part c), the model says that a student in programs 2 or 3 is significantly more likely to earn an award than a student in program 1, and there is a strong statistical relationship between the number of awards earned and the math score.
